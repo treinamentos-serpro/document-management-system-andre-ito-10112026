@@ -53,10 +53,10 @@ export default function App() {
   }
 
   return (
-    <main style={{ fontFamily: 'system-ui, sans-serif', padding: '2rem' }}>
+    <main className="app">
       <h1>Document Management System</h1>
 
-      <section>
+      <section className="card">
         <label htmlFor="user-id">Identificador do usuário </label>
         <input
           id="user-id"

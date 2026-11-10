@@ -14,7 +14,7 @@ function formatDate(isoDate) {
 export default function DocumentList({ userId, documents, isLoading, error }) {
   if (!userId) {
     return (
-      <section>
+      <section className="card">
         <h2>Meus documentos</h2>
         <p>Informe o identificador do usuário para ver seus documentos.</p>
       </section>
@@ -22,17 +22,21 @@ export default function DocumentList({ userId, documents, isLoading, error }) {
   }
 
   return (
-    <section>
+    <section className="card">
       <h2>Meus documentos</h2>
       <ErrorMessage message={error} />
       {isLoading && <p>Carregando documentos...</p>}
       {!isLoading && !error && documents.length === 0 && <p>Nenhum documento enviado ainda.</p>}
       {documents.length > 0 && (
-        <ul>
+        <ul className="document-list">
           {documents.map((document) => (
-            <li key={document.id}>
-              <strong>{document.originalName}</strong> — {formatBytes(document.size)} —{' '}
-              {formatDate(document.uploadedAt)}{' '}
+            <li key={document.id} className="document-item">
+              <span>
+                <strong>{document.originalName}</strong>
+                <span className="document-meta">
+                  {' '}— {formatBytes(document.size)} — {formatDate(document.uploadedAt)}
+                </span>
+              </span>
               <DownloadButton
                 userId={userId}
                 documentId={document.id}

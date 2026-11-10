@@ -35,7 +35,7 @@ export default function UploadComponent({ userId, onUploaded }) {
   }
 
   return (
-    <section>
+    <section className="card">
       <h2>Enviar documento</h2>
       {!userId && <p>Informe o identificador do usuário para enviar documentos.</p>}
       <form onSubmit={handleSubmit}>
@@ -51,7 +51,11 @@ export default function UploadComponent({ userId, onUploaded }) {
         </button>
       </form>
       <ErrorMessage message={error} />
-      {successMessage && <p role="status">{successMessage}</p>}
+      {successMessage && (
+        <p role="status" className="success-message">
+          {successMessage}
+        </p>
+      )}
     </section>
   );
 }
