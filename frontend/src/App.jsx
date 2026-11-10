@@ -1,20 +1,80 @@
-// Seed do componente raiz do Document Management System.
-//
-// Este é apenas um ponto de partida mínimo. Durante o Passo 3 você vai usar o
-// Agent Mode do GitHub Copilot para construir os componentes:
-//   - components/UploadComponent
-//   - components/DocumentList
-//   - components/DownloadButton
-// e o serviço services/ que consome a API do backend via fetch.
+import { useEffect, useState } from 'react';
+import UploadComponent from './components/UploadComponent';
+import DocumentList from './components/DocumentList';
+import { listDocuments } from './services/documentsApi';
+
+const USER_ID_STORAGE_KEY = 'dms.userId';
 
 export default function App() {
+  const [userId, setUserId] = useState(() => localStorage.getItem(USER_ID_STORAGE_KEY) ?? '');
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [documents, setDocuments] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState('');
+
+  const currentUserId = userId.trim();
+
+  useEffect(() => {
+    localStorage.setItem(USER_ID_STORAGE_KEY, userId);
+  }, [userId]);
+
+  useEffect(() => {
+    if (!currentUserId) {
+      setDocuments([]);
+      setLoadError('');
+      return undefined;
+    }
+
+    // Ignora respostas antigas quando o usuário muda antes do fim da requisição.
+    let isCurrent = true;
+    setIsLoading(true);
+    setLoadError('');
+
+    listDocuments(currentUserId)
+      .then((items) => {
+        if (isCurrent) setDocuments(items);
+      })
+      .catch((error) => {
+        if (!isCurrent) return;
+        setDocuments([]);
+        setLoadError(error.message);
+      })
+      .finally(() => {
+        if (isCurrent) setIsLoading(false);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [currentUserId, refreshKey]);
+
+  function handleUploaded() {
+    setRefreshKey((key) => key + 1);
+  }
+
   return (
     <main style={{ fontFamily: 'system-ui, sans-serif', padding: '2rem' }}>
       <h1>Document Management System</h1>
-      <p>
-        Seed do frontend. Construa a interface durante o Passo 3 usando o Agent
-        Mode do GitHub Copilot.
-      </p>
+
+      <section>
+        <label htmlFor="user-id">Identificador do usuário </label>
+        <input
+          id="user-id"
+          type="text"
+          value={userId}
+          placeholder="ex.: maria@exemplo.com"
+          onChange={(event) => setUserId(event.target.value)}
+        />
+      </section>
+
+      <UploadComponent userId={currentUserId} onUploaded={handleUploaded} />
+
+      <DocumentList
+        userId={currentUserId}
+        documents={documents}
+        isLoading={isLoading}
+        error={loadError}
+      />
     </main>
   );
 }
