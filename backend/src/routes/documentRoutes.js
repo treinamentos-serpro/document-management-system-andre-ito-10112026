@@ -24,6 +24,12 @@ const uploadRateLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+const downloadRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 const router = express.Router();
 
@@ -34,6 +40,10 @@ router.post(
   documentController.uploadDocument,
 );
 router.get('/documents', documentController.listDocuments);
-router.get('/documents/:id/download', documentController.downloadDocument);
+router.get(
+  '/documents/:id/download',
+  downloadRateLimit,
+  documentController.downloadDocument,
+);
 
 module.exports = router;
