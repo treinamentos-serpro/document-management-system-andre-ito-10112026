@@ -1,9 +1,10 @@
 const { randomUUID } = require('node:crypto');
 const repository = require('../repositories/documents.repository');
+const storage = require('./storage.service');
 
 function toMetadata(document) {
-  const { storedName, ...metadata } = document;
-  return metadata;
+  const { id, originalName, mimeType, size, uploadedAt, owner } = document;
+  return { id, originalName, mimeType, size, uploadedAt, owner };
 }
 
 function createDocument(file, owner) {
@@ -31,12 +32,12 @@ async function getDownload(id, owner) {
       code: 'DOCUMENT_NOT_FOUND',
     });
   }
-  const filePath = await repository.getFilePath(document.storedName);
+  const filePath = await storage.getFilePath(document.storedName);
   return { filePath, ...toMetadata(document) };
 }
 
 module.exports = {
-  prepareStorage: repository.prepareStorage,
+  prepareStorage: storage.prepareStorage,
   createDocument,
   listDocuments,
   getDownload,

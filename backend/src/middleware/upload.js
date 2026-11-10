@@ -1,7 +1,7 @@
 const { randomUUID } = require('node:crypto');
 const path = require('node:path');
 const multer = require('multer');
-const service = require('../services/documents.service');
+const storage = require('../services/storage.service');
 
 const configuredLimit = Number(process.env.MAX_FILE_SIZE_BYTES || 10485760);
 if (!Number.isSafeInteger(configuredLimit) || configuredLimit <= 0) {
@@ -11,7 +11,7 @@ if (!Number.isSafeInteger(configuredLimit) || configuredLimit <= 0) {
 module.exports = multer({
   storage: multer.diskStorage({
     destination(req, file, callback) {
-      service.prepareStorage().then(
+      storage.prepareStorage().then(
         (directory) => callback(null, directory),
         (error) => callback(error),
       );
