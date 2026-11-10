@@ -10,7 +10,7 @@ function create(document) {
     owner: owner || 'anonymous',
   };
 
-  documents.set(metadata.id, { metadata, filePath: file.path });
+  documents.set(metadata.id, { metadata, fileName: file.filename });
   return metadata;
 }
 

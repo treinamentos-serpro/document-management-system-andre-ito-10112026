@@ -1,3 +1,5 @@
+const path = require('node:path');
+const { storageDirectory } = require('../config/storage');
 const documentService = require('../services/documentService');
 
 function uploadDocument(req, res) {
@@ -19,11 +21,16 @@ function downloadDocument(req, res) {
     return res.status(404).json({ error: 'Documento não encontrado.' });
   }
 
-  return res.download(document.filePath, document.metadata.originalName, (error) => {
-    if (error && !res.headersSent) {
-      res.status(404).json({ error: 'Documento não encontrado.' });
-    }
-  });
+  return res.download(
+    path.basename(document.fileName),
+    document.metadata.originalName,
+    { root: storageDirectory },
+    (error) => {
+      if (error && !res.headersSent) {
+        res.status(404).json({ error: 'Documento não encontrado.' });
+      }
+    },
+  );
 }
 
 module.exports = { uploadDocument, listDocuments, downloadDocument };
