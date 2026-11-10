@@ -130,6 +130,39 @@ test('backend de documentos', async (context) => {
     assert.deepStrictEqual(await readdir(storageDirectory), filesBefore);
   });
 
+  await context.test('limita campos multipart e corpos JSON excessivos', async () => {
+    const allowedBody = new FormData();
+    for (let index = 0; index < 16; index += 1) allowedBody.append(`campo${index}`, 'valor');
+    allowedBody.append('file', new Blob(['conteudo']), 'documento.txt');
+    const allowed = await fetch(`${baseUrl}/upload`, {
+      method: 'POST', headers: { 'X-User-Id': 'ana' }, body: allowedBody,
+    });
+    assert.strictEqual(allowed.status, 201);
+
+    const body = new FormData();
+    for (let index = 0; index < 17; index += 1) body.append(`campo${index}`, 'valor');
+    const multipart = await fetch(`${baseUrl}/upload`, {
+      method: 'POST', headers: { 'X-User-Id': 'ana' }, body,
+    });
+    assert.strictEqual(multipart.status, 400);
+    assert.strictEqual((await multipart.json()).error.code, 'INVALID_UPLOAD');
+
+    const json = await fetch(`${baseUrl}/upload`, {
+      method: 'POST',
+      headers: { 'X-User-Id': 'ana', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ value: 'a'.repeat(110000) }),
+    });
+    assert.strictEqual(json.status, 413);
+    assert.strictEqual((await json.json()).error.code, 'REQUEST_TOO_LARGE');
+  });
+
+  await context.test('rejeita nomes internos que tentam escapar do storage', async () => {
+    const repository = require('../src/repositories/documents.repository');
+    for (const name of ['../arquivo.txt', '/tmp/arquivo.txt', 'arquivo.txt']) {
+      await assert.rejects(repository.getFilePath(name), /Nome de arquivo armazenado invalido/);
+    }
+  });
+
   await context.test('falhas de leitura e escrita retornam erro interno sem expor caminhos', async () => {
     const loggedErrors = [];
     context.mock.method(console, 'error', (...args) => loggedErrors.push(args));

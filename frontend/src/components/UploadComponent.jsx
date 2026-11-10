@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { uploadDocument } from '../services/documentsApi';
 import ErrorMessage from './ErrorMessage';
 
@@ -7,12 +7,14 @@ export default function UploadComponent({ userId, onUploaded }) {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const isMounted = useRef(false);
 
-  // Mensagens de um usuário não devem aparecer após a troca de identificador.
   useEffect(() => {
-    setError('');
-    setSuccessMessage('');
-  }, [userId]);
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -23,14 +25,15 @@ export default function UploadComponent({ userId, onUploaded }) {
     setSuccessMessage('');
     try {
       const document = await uploadDocument(userId, selectedFile);
+      if (!isMounted.current) return;
       setSuccessMessage(`Documento "${document.originalName}" enviado com sucesso.`);
       setSelectedFile(null);
       form.reset();
       onUploaded?.(document);
     } catch (uploadError) {
-      setError(uploadError.message);
+      if (isMounted.current) setError(uploadError.message);
     } finally {
-      setIsUploading(false);
+      if (isMounted.current) setIsUploading(false);
     }
   }
 

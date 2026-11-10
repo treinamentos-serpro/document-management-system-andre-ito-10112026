@@ -1,29 +1,5 @@
-const { randomUUID } = require('node:crypto');
-const path = require('node:path');
 const multer = require('multer');
 const service = require('../services/documents.service');
-
-const configuredLimit = Number(process.env.MAX_FILE_SIZE_BYTES || 10485760);
-if (!Number.isSafeInteger(configuredLimit) || configuredLimit <= 0) {
-  throw new Error('MAX_FILE_SIZE_BYTES deve ser um inteiro positivo.');
-}
-
-const receiveFile = multer({
-  storage: multer.diskStorage({
-    destination(req, file, callback) {
-      service.prepareStorage().then(
-        (directory) => callback(null, directory),
-        (error) => callback(error),
-      );
-    },
-    filename(req, file, callback) {
-      const extension = path.extname(file.originalname);
-      const safeExtension = /^\.[a-z0-9]{1,10}$/i.test(extension) ? extension : '';
-      callback(null, `${randomUUID()}${safeExtension}`);
-    },
-  }),
-  limits: { fileSize: configuredLimit },
-}).single('file');
 
 function requireUser(req, res, next) {
   const owner = req.get('X-User-Id')?.trim();
@@ -82,6 +58,10 @@ function handleError(error, req, res, next) {
     status = 404;
     code = error.code;
     message = error.message;
+  } else if (error.type === 'entity.too.large') {
+    status = 413;
+    code = 'REQUEST_TOO_LARGE';
+    message = 'O corpo da requisicao excede o tamanho permitido.';
   } else if (error.type === 'entity.parse.failed') {
     status = 400;
     code = 'INVALID_REQUEST';
@@ -92,4 +72,4 @@ function handleError(error, req, res, next) {
   res.status(status).json({ error: { code, message } });
 }
 
-module.exports = { requireUser, receiveFile, upload, list, download, handleError };
+module.exports = { requireUser, upload, list, download, handleError };

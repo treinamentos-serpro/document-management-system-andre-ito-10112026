@@ -103,6 +103,7 @@ Códigos de erro previstos:
 | 400  | MISSING_FILE       | Requisição de upload sem campo de arquivo |
 | 404  | DOCUMENT_NOT_FOUND | Documento inexistente ou pertencente a outro usuário |
 | 413  | FILE_TOO_LARGE     | Arquivo acima de `MAX_FILE_SIZE_BYTES` |
+| 413  | REQUEST_TOO_LARGE  | Corpo JSON acima do limite do Express |
 | 500  | INTERNAL_ERROR     | Falha inesperada, incluindo erro de leitura ou gravação em disco |
 
 Decisão: documento de outro usuário responde `404`, e não `403`, para não revelar a existência do identificador.
@@ -182,6 +183,8 @@ Camadas internas não importam camadas externas. Services não conhecem Express 
 - `multer` com `diskStorage` grava os arquivos em `STORAGE_DIR` (padrão `backend/storage`).
 - O `storedName` é gerado pelo servidor (UUID mais extensão segura), nunca o nome original.
 - `limits.fileSize` aplica `MAX_FILE_SIZE_BYTES`; o erro do multer é convertido para `413`.
+- O upload também limita campos multipart a 16, com até 64 KiB por campo e 17 partes no total; exceder esses limites retorna `400 INVALID_UPLOAD`.
+- O nome interno é validado antes da leitura, além de ser gerado pelo servidor no upload.
 - Nenhum provedor externo é usado.
 
 ### Riscos e pontos em aberto

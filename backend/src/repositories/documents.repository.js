@@ -26,6 +26,10 @@ function findById(id) {
 }
 
 async function getFilePath(storedName) {
+  if (typeof storedName !== 'string' ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(\.[a-z0-9]{1,10})?$/i.test(storedName)) {
+    throw new Error('Nome de arquivo armazenado invalido.');
+  }
   const filePath = path.join(storageDirectory, storedName);
   await access(filePath, constants.R_OK);
   return filePath;

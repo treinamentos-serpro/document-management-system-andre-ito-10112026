@@ -9,6 +9,7 @@ export default function App() {
   const [userId, setUserId] = useState(() => localStorage.getItem(USER_ID_STORAGE_KEY) ?? '');
   const [refreshKey, setRefreshKey] = useState(0);
   const [documents, setDocuments] = useState([]);
+  const [documentsOwner, setDocumentsOwner] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState('');
 
@@ -32,11 +33,15 @@ export default function App() {
 
     listDocuments(currentUserId)
       .then((items) => {
-        if (isCurrent) setDocuments(items);
+        if (isCurrent) {
+          setDocuments(items);
+          setDocumentsOwner(currentUserId);
+        }
       })
       .catch((error) => {
         if (!isCurrent) return;
         setDocuments([]);
+        setDocumentsOwner(currentUserId);
         setLoadError(error.message);
       })
       .finally(() => {
@@ -67,13 +72,13 @@ export default function App() {
         />
       </section>
 
-      <UploadComponent userId={currentUserId} onUploaded={handleUploaded} />
+      <UploadComponent key={currentUserId} userId={currentUserId} onUploaded={handleUploaded} />
 
       <DocumentList
         userId={currentUserId}
-        documents={documents}
-        isLoading={isLoading}
-        error={loadError}
+        documents={documentsOwner === currentUserId ? documents : []}
+        isLoading={isLoading || (Boolean(currentUserId) && documentsOwner !== currentUserId)}
+        error={documentsOwner === currentUserId ? loadError : ''}
       />
     </main>
   );
